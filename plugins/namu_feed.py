@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 
 class Namu(Plugin):
     def register_jobs(self):
-        time = 60*30
+        time = 60*60
 	job = NamuFeed(time)
     	self.jobs.append(job)
 
