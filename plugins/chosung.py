@@ -20,7 +20,7 @@ class ChosungGame(Plugin):
             return
         conn = sqlite3.connect(prob_db)
         c = conn.cursor()
-        c.execute("CREATE TABLE prob (subject text, anwser text, hint text)")
+        c.execute("CREATE TABLE prob (subject text, anwser text, hint text, examiner text)")
         conn.commit()
         conn.close()
 
@@ -42,14 +42,14 @@ class ChosungGame(Plugin):
         c = conn.cursor()
         data = None
         for row in c.execute(u"SELECT * from prob order by random() limit 1"):
-            data = row #subject, anwser, hint
+            data = row #subject, anwser, hint, examiner
         conn.close()
         return data
 
-    def insert_content(self, subject, anwser, hint="Handmade"):
+    def insert_content(self, subject, anwser, hint="Handmade", examiner=""):
         conn = sqlite3.connect(prob_db)
         c = conn.cursor()
-        payload = u"INSERT INTO {} VALUES ('{subject}', '{anwser}', '{hint}')".format("prob", subject=subject, anwser=anwser, hint=hint)
+        payload = u"INSERT INTO {} VALUES ('{subject}', '{anwser}', '{hint}', '{exa}')".format("prob", subject=subject, anwser=anwser, hint=hint, exa=examiner)
         c.execute(payload)
         conn.commit()
         conn.close()
@@ -59,6 +59,7 @@ class ChosungGame(Plugin):
         subject = u"사자성어"
         if self.is_exists_subject_in_db(subject) is True:
             return
+        return
         url = "https://ko.wiktionary.org/wiki/%EB%B6%80%EB%A1%9D:%EC%82%AC%EC%9E%90%EC%84%B1%EC%96%B4"
         html_code = requests.get(url).text
         soup = BeautifulSoup(html_code, 'html.parser')
@@ -67,7 +68,7 @@ class ChosungGame(Plugin):
             hanja, anwser, mean = [td.text for td in row.find_all('td')]
             hint = [hanja, mean]
             hint = "&".join(hint)
-            self.insert_content(subject, anwser, hint)
+            self.insert_content(subject, anwser, h)
         return
 
     # 게임 차트 순위
@@ -191,7 +192,6 @@ class ChosungGame(Plugin):
         self.create_prob_db()
         self.run_rank_system()
         # Only Vaild DM
-        print (data)
         if data['channel'].startswith("D"):
             text = data['text']
             if text == "help":
@@ -203,11 +203,11 @@ class ChosungGame(Plugin):
                 text = text.split(":")
                 anwser = text[1]
                 subject = text[2]
-                self.insert_content(subject, anwser)
-                self.write_anwser(3, subject, anwser)
-		cs = self.create_chosung(anwser)
                 general = "C5FJ1SN1X"
                 userinfo = self.get_userinfo(data['user'])
+                self.insert_content(subject, anwser, examiner=userinfo['name'])
+                self.write_anwser(3, subject, anwser)
+		cs = self.create_chosung(anwser)
                 self.outputs.append([general,  u"@{}님이 문제를 출제하였습니다.\n> {} (3점) : {}"\
                         .format(userinfo['name'], subject, "".join(cs))])
                 self.outputs.append([data['channel'],"Okay checkout <#C5FJ1SN1X>"])
@@ -227,7 +227,7 @@ class ChosungGame(Plugin):
                     self.write_anwser(1, subject, anwser, hint)
             elif text == "prob":
                 self.create_saja_list()
-                subject, anwser, hint = self.select_contents_by_random()
+                subject, anwser, hint, _ = self.select_contents_by_random()
                 self.write_anwser(3, subject, anwser, hint)
 		cs = self.create_chosung(anwser)
                 self.outputs.append([data['channel'], u"{} (3점) : {}".format(subject, "".join(cs))])
@@ -260,19 +260,42 @@ class ChosungGame(Plugin):
         conn.commit()
         conn.close()
 
+
+    def get_best_examiner(self):
+        conn = sqlite3.connect(prob_db)
+        c = conn.cursor()
+        best_examiner = ""
+        print ("called get best examiner")
+        for row in c.execute("select examiner, COUNT(*) FROM prob GROUP BY examiner"):
+            user, total = row
+            if user == None:
+                continue
+            else:
+                best_examiner = user
+                break
+        conn.commit()
+        conn.close()
+        return best_examiner
+
     def print_rank_score(self):
         conn = sqlite3.connect(score_db)
         c = conn.cursor()
+        best_examiner = self.get_best_examiner()
         output = u""
         for i, row in enumerate(c.execute("SELECT * from chosung order by score DESC")):
             db_username, score = row
             rank = i+1
             special_emoji = ""
             if rank == 1:
-                special_emoji = ":crown:"
+                special_emoji += ":crown:"
             elif rank == 2:
-                special_emoji = ":kejang4:"
-            output += u"{}위 @{} {} : {}\n".format(rank, db_username, special_emoji, score).lstrip()
+                special_emoji += ":kejang4:"
+            if best_examiner == db_username:
+                special_emoji += ":dollar:"
+
+            output += u">{}위 @{} {} : {}\n".format(rank, db_username, special_emoji, score).lstrip()
+
+        output += u":crown: 1등, :kejang4: 2등, :dollar: 명예 출제자, :gun: 최고 마피아"
         conn.commit()
         conn.close()
         return output
