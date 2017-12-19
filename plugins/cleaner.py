@@ -12,11 +12,13 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 prob_db = "prob.sqlite"
 score = 3
+#TOKEN = os.environ['SLACK_BOT_TOKEN']
+TOKEN = "xoxp-186276408005-186278242101-275779859270-21a33e3694b4282bcd59e5411f4645be"
 class Cleaner(Plugin):
         # {u'source_team': u'T5G84C005', u'text': u'\u314b\u314b', u'ts': u'1511921630.000236', u'user': u'U5G85LAN9', u'team': u'T5G84C005', u'type': u'message', u'channel': u'C5FJ1SN1X'}
     def get_userinfo(self, name):
         url = "https://slack.com/api/users.info?token={}&&user={}"\
-                .format(os.environ['SLACK_BOT_TOKEN'], name)
+                .format(TOKEN, name)
         data = requests.get(url).text
         return json.loads(data)['user']
 
@@ -29,7 +31,7 @@ class Cleaner(Plugin):
         if remove_count > 69:
             self.outputs.append([data['channel'], u"너무 많아~"])
         base_url = "https://slack.com/api/channels.history?"
-        url = "https://slack.com/api/channels.history?token={}&channel=C5FJ1SN1X&pretty=1".format(os.environ['SLAKC_BOT_TOKEN'])
+        url = "https://slack.com/api/channels.history?token={}&channel=C5FJ1SN1X&pretty=1".format(TOKEN)
         send_data =  dict()
         send_data['token'] = os.environ['SLACK_BOT_TOKEN']
         send_data['channel'] = data['channel']
@@ -40,22 +42,17 @@ class Cleaner(Plugin):
         if json_dict['ok'] is True:
             for msg_info in json_dict['messages']:
                 delete_url = "https://slack.com/api/chat.delete?"
-                send_data['token'] = os.environ['SLACK_BOT_TOKEN']
+                send_data['token'] = TOKEN
                 send_data['channel'] = data['channel']
                 send_data['ts'] = msg_info['ts']
                 url = self.add_get_args(delete_url, send_data)
-                print(delete_url)
                 r = requests.get(url)
-                print(r.text)
 
     def process_message(self, data):
         if data['channel'].startswith("C"):
             if data['text'] == u'clean':
                 self.remove_chat_history(data)
                 #self.outputs.append([data['channel'], u"뀨".format(hint)])
-            elif data['text'].find(u'퇴근') > -1 :
-                self.remove_chat_history(data, remove_count=1)
-
             elif data['text'].startswith(u"clean"):
                 try:
                     remove_count = int(data['text'].split()[1])
