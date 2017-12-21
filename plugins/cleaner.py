@@ -12,8 +12,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 prob_db = "prob.sqlite"
 score = 3
-#TOKEN = os.environ['SLACK_BOT_TOKEN']
-TOKEN = "xoxp-186276408005-186278242101-275779859270-21a33e3694b4282bcd59e5411f4645be"
+TOKEN = os.environ['SLACK_BOT_TOKEN']
 class Cleaner(Plugin):
         # {u'source_team': u'T5G84C005', u'text': u'\u314b\u314b', u'ts': u'1511921630.000236', u'user': u'U5G85LAN9', u'team': u'T5G84C005', u'type': u'message', u'channel': u'C5FJ1SN1X'}
     def get_userinfo(self, name):
@@ -32,8 +31,9 @@ class Cleaner(Plugin):
             self.outputs.append([data['channel'], u"너무 많아~"])
         base_url = "https://slack.com/api/channels.history?"
         url = "https://slack.com/api/channels.history?token={}&channel=C5FJ1SN1X&pretty=1".format(TOKEN)
+        print(url)
         send_data =  dict()
-        send_data['token'] = os.environ['SLACK_BOT_TOKEN']
+        send_data['token'] =  TOKEN
         send_data['channel'] = data['channel']
         send_data['count'] = remove_count
         url = self.add_get_args(base_url, send_data)

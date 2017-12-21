@@ -8,7 +8,7 @@ import requests
 class Crawler(Plugin):
     def process_message(self, data):
         if data['channel'].startswith("C"):
-            if data['text'] == u'naver':
+            if data[u'text'] == u'naver':
                 url = "http://www.naver.com/"
                 r  = requests.get(url)
                 soup = BeautifulSoup(r.text , 'html.parser')
