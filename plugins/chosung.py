@@ -265,7 +265,7 @@ class ChosungGame(Plugin):
         conn = sqlite3.connect(prob_db)
         c = conn.cursor()
         best_examiner = ""
-        for row in c.execute("select examiner, COUNT(*) FROM prob GROUP BY examiner"):
+        for row in c.execute("select examiner, COUNT(*) FROM prob GROUP BY examiner ORDER BY COUNT(*) DESC"):
             user, total = row
             if user == None:
                 continue
