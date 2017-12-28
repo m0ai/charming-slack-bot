@@ -149,9 +149,8 @@ class ChosungGame(Plugin):
                         'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', \
                         'ㅌ', 'ㅍ', 'ㅎ']
         splitKeywordList = list(word)
-        if set(CHOSUNG_LIST)&set(splitKeywordList) != list():
+        if list(set(CHOSUNG_LIST)&set(splitKeywordList)) != list():
             return None
-
         result = []
         for keyword in splitKeywordList:
             if ord(keyword) >= BASECODE and ord(keyword) <= END:
@@ -208,12 +207,13 @@ class ChosungGame(Plugin):
                 subject = text[2]
                 general = "C5FJ1SN1X"
                 userinfo = self.get_userinfo(data['user'])
-                self.insert_content(subject, anwser, examiner=userinfo['name'])
-                self.write_anwser(3, subject, anwser)
 		cs = self.create_chosung(anwser)
                 if cs is None:
                     self.outputs.append([data['channel'], u"엇.. 정답이 이상한 것 같습니다."])
                     return
+                self.insert_content(subject, anwser, examiner=userinfo['name'])
+                self.write_anwser(3, subject, anwser)
+
                 self.outputs.append([general,  u"@{}님이 문제를 출제하였습니다.\n> {} (3점) : {}"\
                         .format(userinfo['name'], subject, "".join(cs))])
                 self.outputs.append([data['channel'],"Okay checkout <#C5FJ1SN1X>"])
@@ -236,9 +236,6 @@ class ChosungGame(Plugin):
                 subject, anwser, hint, _ = self.select_contents_by_random()
                 self.write_anwser(3, subject, anwser, hint)
 		cs = self.create_chosung(anwser)
-                if cs is None:
-                    self.outputs.append([data['channel'], u"엇.. 다시 시도해주세요."])
-                    return
                 self.outputs.append([data['channel'], u"{} (3점) : {}".format(subject, "".join(cs))])
             elif text == "re":
                 score, subject, keyword, hint = self.read_anwser()
