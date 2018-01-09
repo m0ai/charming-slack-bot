@@ -2,8 +2,6 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 from rtmbot.core import Plugin
-from bs4 import BeautifulSoup
-import requests
 
 class Crawler(Plugin):
     def process_message(self, data):
